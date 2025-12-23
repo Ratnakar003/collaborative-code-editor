@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Collab Code - Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div class="home-container">
+    <div class="home-card">
+      <h1 class="home-title">Collab Code ✨</h1>
+      <p class="home-subtitle">Create or join a room to start coding together.</p>
+
+      <div class="home-form">
+        <label class="home-label">Your Name</label>
+        <input
+          type="text"
+          id="username-input"
+          class="home-input"
+          placeholder="Enter your name"
+        />
+
+        <label class="home-label">Room ID</label>
+        <input
+          type="text"
+          id="roomid-input"
+          class="home-input"
+          placeholder="Enter room id or leave blank"
+        />
+
+        <button id="join-btn" class="home-button">Join Room</button>
+        <button id="random-btn" class="home-button secondary">Generate Random Room</button>
+      </div>
+
+      <p class="home-footer">
+        You’ll be redirected to the editor page with your room.
+      </p>
+    </div>
+  </div>
+
+  <script src="./js/main.js"></script>
+</body>
+</html>

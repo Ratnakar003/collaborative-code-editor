@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Collaborative Code Editor - Room</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Main CSS (Added v=3 to force reload) -->
+  <link rel="stylesheet" href="./css/style.css?v=3" />
+  <link rel="stylesheet" href="./css/editor.css?v=3" />
+
+  <!-- CodeMirror CSS (CDN) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css"
+  />
+</head>
+<body>
+<div class="app-container">
+    <header class="app-header">
+      <div class="logo">Collab Code ✨</div>
+      <div class="room-info">
+        <span>User:</span>
+        <span id="user-name-display">anonymous</span>
+        <span style="margin: 0 6px;">|</span>
+        <span>Room ID:</span>
+        <span id="room-id-display">loading...</span>
+        <span style="margin: 0 6px;">|</span>
+        <span id="save-status" class="save-status">Saved</span>
+      </div>
+      <button id="share-btn" class="share-btn">Share Link</button>
+    </header>
+
+    <main class="app-main">
+      <aside class="sidebar">
+        <h2 class="sidebar-title">Online Users</h2>
+        <ul id="user-list" class="user-list">
+          <!-- Users will be added here -->
+        </ul>
+
+        <div class="chat-container">
+          <h2 class="sidebar-title" style="margin-top: 10px;">Chat</h2>
+          <div id="chat-messages" class="chat-messages"></div>
+          <div id="typing-indicator" class="typing-indicator" style="height: 15px; font-size: 0.7rem; color: #888;"></div>
+          <div class="chat-input-row">
+            <input
+              type="text"
+              id="chat-input"
+              class="chat-input"
+              placeholder="Type message..."
+            />
+            <button id="chat-send-btn" class="chat-send-btn">Send</button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="editor-wrapper">
+        <div class="editor-main" id="editor-main">
+          <!-- Overlay shown while waiting for host approval -->
+          <div id="join-overlay" class="join-overlay hidden">
+            <div class="join-overlay-box">
+              <p id="join-overlay-text">Waiting for host to approve...</p>
+            </div>
+          </div>
+          <div id="editor"></div>
+        </div>
+
+        <!-- Divider you can drag -->
+        <div id="drag-divider" class="drag-divider" title="Drag to resize"></div>
+
+        <div class="side-panel" id="side-panel">
+          <button id="run-btn" class="run-button">Run ▶️</button>
+
+          <!-- Console header -->
+          <div class="console-header">
+            <div class="console-title">Console Output</div>
+            <div class="console-actions">
+              <button id="clear-output-btn" class="clear-output-btn" title="Clear Output">Clear</button>
+            </div>
+          </div>
+
+          <!-- Output area -->
+          <div id="output" class="output"></div>
+        </div>
+      </div>
+    </main>
+</div>
+
+  <!-- CodeMirror JS (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+
+  <!-- Socket.io client (from backend server) -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- our socket logic-->
+   <script src="./js/socket.js?v=2"></script>
+  <!-- Our editor logic -->
+  <script src="./js/editor.js?v=2"></script>
+</body>
+</html>

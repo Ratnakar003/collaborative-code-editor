@@ -1,0 +1,275 @@
+/* -------------------- Reset / Base -------------------- */
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #071127;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  color: #e5e7eb;
+  /* CHANGE: Body scroll enable chesamu */
+  overflow: auto; 
+}
+
+.hidden { display: none !important; }
+
+/* -------------------- Top Header -------------------- */
+.topbar, .app-header {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: #020617;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  flex-shrink: 0;
+}
+
+/* -------------------- Main Layout -------------------- */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  /* Height ni 100vh peduthu, min-height add chesamu. */
+  height: 100vh; 
+  min-height: 600px; 
+  
+  /* CRITICAL CHANGE: Increased min-width to 1024px.
+     If screen is smaller than this (e.g. 100% zoom on laptop),
+     Horizontal Page Scrollbar will appear immediately. */
+  min-width: 1024px; 
+  
+  width: 100%;
+  overflow: hidden; /* Internal scrolling ki container clean ga undali */
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  min-height: 0;
+}
+
+/* -------------------- Sidebar (Left) -------------------- */
+.left-panel, .sidebar {
+  flex: 0 0 220px;
+  min-width: 180px;
+  background: #0b1221;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* User List */
+.sidebar-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.user-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px 0;
+  overflow-y: auto;
+  flex: 0 1 auto;
+  max-height: 35%; 
+  min-height: 40px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.user-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px;
+  margin-bottom: 2px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.user-color-swatch { width: 8px; height: 8px; border-radius: 50%; }
+
+/* Chat Section */
+.chat-container {
+  flex: 1; 
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: 5px;
+  overflow: hidden;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  background: rgba(0,0,0,0.2);
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  min-height: 0;
+}
+
+.chat-input-row {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 4px;
+}
+
+.chat-input {
+  flex: 1;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: white;
+  padding: 6px 8px;
+  border-radius: 4px;
+  outline: none;
+  font-size: 0.85rem;
+  min-width: 0;
+}
+
+.chat-send-btn {
+  background: #3b82f6;
+  border: none;
+  color: white;
+  padding: 0 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  flex: 0 0 auto;
+}
+
+/* -------------------- Editor Wrapper -------------------- */
+.editor-wrapper {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+#editor-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  height: 100%;
+}
+
+/* EDITOR SCROLL FIX */
+#editor { 
+  flex: 1; 
+  position: relative; 
+  overflow: hidden; 
+  height: 100%;
+}
+
+.CodeMirror {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* -------------------- Right Panel (Console) -------------------- */
+#side-panel {
+  flex: 0 0 260px;
+  max-width: 50%;
+  background: #020617;
+  border-left: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  overflow: hidden;
+  height: 100%;
+}
+
+.run-button, #run-btn {
+  flex: 0 0 auto;
+  width: 100%;
+  background: #22c55e;
+  color: #052e16;
+  border: none;
+  padding: 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.console-header {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.console-title {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.clear-output-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #94a3b8;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.7rem;
+}
+
+/* Output Area - Both Scrolls Active */
+.output {
+  flex: 1; 
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 4px;
+  padding: 8px;
+  overflow: auto; 
+  white-space: pre; 
+  max-width: 100%;
+  
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #e2e8f0;
+  min-height: 0; 
+}
+
+/* Drag Divider */
+#drag-divider {
+  width: 6px;
+  background: #020617;
+  cursor: col-resize;
+  border-left: 1px solid #1e293b;
+  flex-shrink: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+  /* Mobile lo matrame Vertical stacking vastundi. 
+     Desktop layout will PERSIST until 600px, creating scrollbars instead. */
+  .app-container { height: auto; min-height: 100vh; min-width: 100%; overflow: visible; }
+  .app-main { flex-direction: column; overflow: visible; height: auto; }
+  
+  .left-panel, .sidebar { flex: none; height: 300px; width: 100%; }
+  .editor-wrapper { flex: none; height: 500px; width: 100%; flex-direction: column; }
+  #side-panel { flex: none; height: 300px; width: 100%; border-left: none; border-top: 1px solid #333; max-width: none; }
+  #drag-divider { display: none; }
+}
