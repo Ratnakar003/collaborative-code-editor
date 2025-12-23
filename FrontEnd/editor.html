@@ -5,9 +5,9 @@
   <title>Collaborative Code Editor - Room</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Main CSS (Added v=3 to force reload) -->
-  <link rel="stylesheet" href="./css/style.css?v=3" />
-  <link rel="stylesheet" href="./css/editor.css?v=3" />
+  <!-- Main CSS (Added v=4 to force reload) -->
+  <link rel="stylesheet" href="./css/style.css?v=4" />
+  <link rel="stylesheet" href="./css/editor.css?v=4" />
 
   <!-- CodeMirror CSS (CDN) -->
   <link
@@ -90,6 +90,18 @@
     </main>
 </div>
 
+<!-- NEW: Approval Modal for Host -->
+<div id="approval-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>Join Request</h3>
+    <p id="approval-text">A user wants to join...</p>
+    <div class="modal-actions">
+      <button id="btn-reject" class="btn-danger">Reject</button>
+      <button id="btn-approve" class="btn-success">Approve</button>
+    </div>
+  </div>
+</div>
+
   <!-- CodeMirror JS (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
@@ -98,8 +110,8 @@
   <script src="/socket.io/socket.io.js"></script>
 
   <!-- our socket logic-->
-   <script src="./js/socket.js?v=2"></script>
+   <script src="./js/socket.js?v=4"></script>
   <!-- Our editor logic -->
-  <script src="./js/editor.js?v=2"></script>
+  <script src="./js/editor.js?v=4"></script>
 </body>
 </html>

@@ -10,185 +10,128 @@ const Rooms = require("./rooms");
 const app = express();
 const PORT = 3000;
 
-console.log("Server starting...");
-
 app.use(cors());
 app.use(express.json());
 
-// ----- REST API -----
+// REST API
 app.use("/api/rooms", roomRoutes);
 
-// ---- Serve frontend static files ----
+// Serve frontend
 const frontendPath = path.join(__dirname, "../frontend");
 app.use(express.static(frontendPath));
 
-// ----- HTTP server + Socket.io setup -----
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+  cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
-// Host of each room: roomId -> socketId
+// roomId -> hostSocketId
 const roomHosts = {};
-// Pending join requests: roomId -> [ { socketId, name } ]
+// roomId -> pending joins
 const pendingJoins = {};
 
-// ----- Socket.io events -----
 io.on("connection", (socket) => {
-  console.log("🔌 New client connected:", socket.id);
+  console.log("🔌 Connected:", socket.id);
 
-  socket.on("cursor-move", ({ roomId, name, cursor }) => {
-  if (!roomId) return;
-  socket.to(roomId).emit("cursor-update", { name, cursor });
-});
-
-  // STEP 1: client requests to join a room
+  // REQUEST JOIN
   socket.on("request-join", ({ roomId, name }) => {
     if (!roomId || !name) return;
 
-    const currentHostId = roomHosts[roomId];
-
-    // If no host yet -> this user becomes HOST and joins immediately
-    if (!currentHostId) {
+    // FIRST USER = HOST
+    if (!roomHosts[roomId]) {
       roomHosts[roomId] = socket.id;
 
       socket.join(roomId);
       socket.roomId = roomId;
       socket.userName = name;
 
-      const usersInRoom = Rooms.addUserToRoom(roomId, socket.id, name);
-      io.to(roomId).emit("room-users", usersInRoom);
+      const users = Rooms.addUserToRoom(roomId, socket.id, name);
+      io.to(roomId).emit("room-users", users);
 
       socket.emit("join-approved", { roomId, isHost: true });
-      console.log(`⭐ ${name} (${socket.id}) is now HOST of room ${roomId}`);
+      console.log(`⭐ Host created: ${name}`);
       return;
     }
 
-    // Otherwise, send join request to host
-    if (!pendingJoins[roomId]) pendingJoins[roomId] = [];
+    // SEND REQUEST TO HOST
+    pendingJoins[roomId] ||= [];
     pendingJoins[roomId].push({ socketId: socket.id, name });
 
-    console.log(`📨 Join request from ${name} (${socket.id}) for room ${roomId}`);
-
-    io.to(currentHostId).emit("join-request", {
+    io.to(roomHosts[roomId]).emit("join-request", {
       roomId,
       socketId: socket.id,
       name,
     });
   });
 
-  // STEP 2: host approves join
+  // APPROVE JOIN
   socket.on("approve-join", ({ roomId, socketId }) => {
-    if (!roomId || !socketId) return;
-
-    const hostId = roomHosts[roomId];
-    if (socket.id !== hostId) {
-      console.log("❗ Non-host tried to approve join");
-      return;
-    }
+    if (roomHosts[roomId] !== socket.id) return;
 
     const pending = pendingJoins[roomId] || [];
-    const index = pending.findIndex((p) => p.socketId === socketId);
-    if (index === -1) return;
+    const req = pending.find((p) => p.socketId === socketId);
+    if (!req) return;
 
-    const { name } = pending[index];
-    pending.splice(index, 1);
+    pendingJoins[roomId] = pending.filter(p => p.socketId !== socketId);
 
-    const targetSocket = io.sockets.sockets.get(socketId);
-    if (!targetSocket) {
-      console.log("❗ Requested user disconnected before approval");
-      return;
-    }
+    const target = io.sockets.sockets.get(socketId);
+    if (!target) return;
 
-    targetSocket.join(roomId);
-    targetSocket.roomId = roomId;
-    targetSocket.userName = name;
+    target.join(roomId);
+    target.roomId = roomId;
+    target.userName = req.name;
 
-    const usersInRoom = Rooms.addUserToRoom(roomId, socketId, name);
-    io.to(roomId).emit("room-users", usersInRoom);
+    const users = Rooms.addUserToRoom(roomId, socketId, req.name);
+    io.to(roomId).emit("room-users", users);
 
-    targetSocket.emit("join-approved", { roomId, isHost: false });
-    console.log(`✅ Host approved ${name} (${socketId}) for room ${roomId}`);
+    target.emit("join-approved", { roomId, isHost: false });
   });
 
-  // STEP 3: host rejects join
+  // REJECT JOIN (FIXED – NO AUTO REJECT)
   socket.on("reject-join", ({ roomId, socketId }) => {
-    if (!roomId || !socketId) return;
+    if (roomHosts[roomId] !== socket.id) return;
 
-    const hostId = roomHosts[roomId];
-    if (socket.id !== hostId) {
-      console.log("❗ Non-host tried to reject join");
-      return;
-    }
+    pendingJoins[roomId] = (pendingJoins[roomId] || [])
+      .filter(p => p.socketId !== socketId);
 
-    const pending = pendingJoins[roomId] || [];
-    const index = pending.findIndex((p) => p.socketId === socketId);
-    if (index === -1) return;
-
-    pending.splice(index, 1);
-
-    const targetSocket = io.sockets.sockets.get(socketId);
-    if (targetSocket) {
-      targetSocket.emit("join-rejected", { roomId });
-    }
-
-    console.log(`🚫 Host rejected ${socketId} for room ${roomId}`);
+    const target = io.sockets.sockets.get(socketId);
+    if (target) target.emit("join-rejected", { roomId });
   });
 
-  // CODE CHANGES (only allowed if socket is actually in that room)
+  // CODE SYNC
   socket.on("code-change", ({ roomId, code }) => {
-    if (!roomId) return;
-    if (socket.roomId !== roomId) return; // not approved / not joined
-
+    if (socket.roomId !== roomId) return;
     Rooms.updateRoomCode(roomId, code);
     socket.to(roomId).emit("code-update", code);
   });
 
-  // CHAT MESSAGES (only allowed if joined)
+  // CHAT
   socket.on("chat-message", ({ roomId, name, message }) => {
-    if (!roomId || !message) return;
-    if (socket.roomId !== roomId) return; // not approved / not joined
-
-    const trimmed = message.toString().trim();
-    if (!trimmed) return;
-
-    io.to(roomId).emit("chat-message", {
-      name,
-      message: trimmed,
-      timestamp: Date.now(),
-    });
+    if (socket.roomId !== roomId) return;
+    io.to(roomId).emit("chat-message", { name, message });
   });
+
+  // TYPING
   socket.on("typing", ({ roomId, name }) => {
-  if (!roomId) return;
-  if (socket.roomId !== roomId) return;
-
-  socket.to(roomId).emit("user-typing", { name });
-});
-
+    if (socket.roomId !== roomId) return;
+    socket.to(roomId).emit("user-typing", { name });
+  });
 
   socket.on("disconnect", () => {
-    console.log("❌ Client disconnected:", socket.id);
     const roomId = socket.roomId;
+    if (!roomId) return;
 
-    if (roomId) {
-      const usersInRoom = Rooms.removeUserFromRoom(roomId, socket.id);
-      io.to(roomId).emit("room-users", usersInRoom);
-    }
+    const users = Rooms.removeUserFromRoom(roomId, socket.id);
+    io.to(roomId).emit("room-users", users);
 
-    // If this socket was host of a room
-    if (roomId && roomHosts[roomId] === socket.id) {
-      console.log(`⚠️ Host left room ${roomId}`);
+    if (roomHosts[roomId] === socket.id) {
       delete roomHosts[roomId];
       pendingJoins[roomId] = [];
     }
   });
 });
 
-// Start the server
-server.listen(PORT, () => {
-  console.log(`✅ Backend + Socket.io running on http://localhost:${PORT}`);
-});
+server.listen(PORT, () =>
+  console.log(`✅ Server running http://localhost:${PORT}`)
+);

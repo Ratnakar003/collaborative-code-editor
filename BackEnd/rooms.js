@@ -1,30 +1,89 @@
-// rooms.js
-const db = require("./database");
+// BackEnd/rooms.js
+// Manages room state: users + code
 
-function getRoomCode(roomId) {
-  return db.getRoomCode(roomId);
+const rooms = {}; 
+/*
+rooms = {
+  roomId: {
+    code: "string",
+    users: {
+      socketId: name
+    }
+  }
+}
+*/
+
+// ---------- HELPERS ----------
+
+// Check if room exists
+function roomExists(roomId) {
+  return !!rooms[roomId];
 }
 
-function updateRoomCode(roomId, code) {
-  db.updateRoomCode(roomId, code);
-}
-
-function addUserToRoom(roomId, socketId, name) {
-  return db.addUserToRoom(roomId, socketId, name);
-}
-
-function removeUserFromRoom(roomId, socketId) {
-  return db.removeUserFromRoom(roomId, socketId);
-}
-
+// Get users in room (array for frontend)
 function getUsersInRoom(roomId) {
-  return db.getUsersInRoom(roomId);
+  if (!rooms[roomId]) return [];
+
+  return Object.entries(rooms[roomId].users).map(
+    ([socketId, name]) => ({
+      socketId,
+      name,
+    })
+  );
 }
 
+// ---------- CORE LOGIC ----------
+
+// Add user to room (creates room if needed)
+function addUserToRoom(roomId, socketId, name) {
+  if (!rooms[roomId]) {
+    rooms[roomId] = {
+      code: "",
+      users: {},
+    };
+  }
+
+  rooms[roomId].users[socketId] = name;
+  return getUsersInRoom(roomId);
+}
+
+// Remove user from room
+function removeUserFromRoom(roomId, socketId) {
+  if (!rooms[roomId]) return [];
+
+  delete rooms[roomId].users[socketId];
+
+  // If room empty → delete room
+  if (Object.keys(rooms[roomId].users).length === 0) {
+    delete rooms[roomId];
+    return [];
+  }
+
+  return getUsersInRoom(roomId);
+}
+
+// Update room code
+function updateRoomCode(roomId, code) {
+  if (!rooms[roomId]) {
+    rooms[roomId] = {
+      code: "",
+      users: {},
+    };
+  }
+  rooms[roomId].code = code;
+}
+
+// Get room code (used by REST API)
+function getRoomCode(roomId) {
+  return rooms[roomId]?.code || "";
+}
+
+// ---------- EXPORTS ----------
 module.exports = {
-  getRoomCode,
-  updateRoomCode,
+  roomExists,
+  getUsersInRoom,
   addUserToRoom,
   removeUserFromRoom,
-  getUsersInRoom,
+  updateRoomCode,
+  getRoomCode,
 };

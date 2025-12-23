@@ -8,8 +8,18 @@ function initCollab(roomId, name, editor) {
   let isRemoteUpdate = false;
   let isHost = false;
 
+  // -- JOIN REQUEST ELEMENTS --
   const joinOverlay = document.getElementById("join-overlay");
   const joinOverlayText = document.getElementById("join-overlay-text");
+  
+  // -- HOST APPROVAL MODAL ELEMENTS --
+  const approvalModal = document.getElementById("approval-modal");
+  const approvalText = document.getElementById("approval-text");
+  const btnApprove = document.getElementById("btn-approve");
+  const btnReject = document.getElementById("btn-reject");
+
+  // Store current pending request for host
+  let currentRequest = null;
 
   function showJoinOverlay(text) {
     if (joinOverlay) joinOverlay.classList.remove("hidden");
@@ -30,12 +40,8 @@ function initCollab(roomId, name, editor) {
   let saveTimeout;
   let typingTimeout;
   const typingEl = document.getElementById("typing-indicator");
-
-  // user color map from backend
   const userColorMap = {};
-
-  // store remote cursors
-  const remoteCursors = {};  // name → CodeMirror marker
+  const remoteCursors = {}; 
 
   // ------------------- TYPING ---------------------
   function emitTyping(typingName) {
@@ -72,12 +78,38 @@ function initCollab(roomId, name, editor) {
     window.location.href = "/index.html";
   });
 
+  // --- HOST LOGIC: HANDLE INCOMING REQUESTS ---
   socket.on("join-request", ({ roomId: r, socketId, name: requesterName }) => {
     if (!isHost) return;
-    const allow = window.confirm(`${requesterName} wants to join room ${r}. Allow?`);
-    if (allow) socket.emit("approve-join", { roomId: r, socketId });
-    else socket.emit("reject-join", { roomId: r, socketId });
+    
+    // 1. Store the request details
+    currentRequest = { roomId: r, socketId };
+    
+    // 2. Show the custom modal (instead of blocking window.confirm)
+    if (approvalText) approvalText.textContent = `${requesterName} wants to join room ${r}.`;
+    if (approvalModal) approvalModal.classList.remove("hidden");
   });
+
+  // Wire up the modal buttons
+  if (btnApprove) {
+    btnApprove.onclick = () => {
+      if (currentRequest) {
+        socket.emit("approve-join", currentRequest);
+        currentRequest = null;
+      }
+      if (approvalModal) approvalModal.classList.add("hidden");
+    };
+  }
+
+  if (btnReject) {
+    btnReject.onclick = () => {
+      if (currentRequest) {
+        socket.emit("reject-join", currentRequest);
+        currentRequest = null;
+      }
+      if (approvalModal) approvalModal.classList.add("hidden");
+    };
+  }
 
   // ------------------- CODE SYNC ---------------------
   editor.on("change", () => {
@@ -156,35 +188,31 @@ function initCollab(roomId, name, editor) {
 
   // ------------------- CHAT ---------------------
   function appendChatMessage(from, text, isMe) {
-  const div = document.createElement("div");
-  div.className = "chat-message" + (isMe ? " me" : "");
+    const div = document.createElement("div");
+    div.className = "chat-message" + (isMe ? " me" : "");
 
-  // USERNAME
-  const nameSpan = document.createElement("span");
-  nameSpan.className = "chat-message-name";
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "chat-message-name";
 
-  if (isMe) {
-    nameSpan.textContent = "You";
-    nameSpan.style.color = "#bbdcff";
-  } else {
-    nameSpan.textContent = from;
-    if (userColorMap[from]) {
-      nameSpan.style.color = userColorMap[from];
+    if (isMe) {
+      nameSpan.textContent = "You";
+      nameSpan.style.color = "#bbdcff";
+    } else {
+      nameSpan.textContent = from;
+      if (userColorMap[from]) {
+        nameSpan.style.color = userColorMap[from];
+      }
     }
+
+    const textSpan = document.createElement("span");
+    textSpan.textContent = text;
+
+    div.appendChild(nameSpan);
+    div.appendChild(textSpan);
+
+    chatMessagesEl.appendChild(div);
+    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
   }
-
-  // MESSAGE TEXT
-  const textSpan = document.createElement("span");
-  textSpan.textContent = text;
-
-  // Assemble bubble
-  div.appendChild(nameSpan);
-  div.appendChild(textSpan);
-
-  chatMessagesEl.appendChild(div);
-  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-}
-
 
   function sendChat() {
     const msg = chatInputEl.value.trim();
@@ -207,32 +235,26 @@ function initCollab(roomId, name, editor) {
   });
 
   // ------------------- CURSOR SYNC ---------------------
-
-  // Send your cursor position to server
   editor.on("cursorActivity", () => {
-    const cursor = editor.getCursor(); // {line, ch}
+    const cursor = editor.getCursor(); 
     socket.emit("cursor-move", { roomId, name, cursor });
   });
 
-  // Receive and draw remote cursors
   socket.on("cursor-update", ({ name: userName, cursor }) => {
-    if (userName === name) return; // ignore own cursor
+    if (userName === name) return; 
 
     const color = userColorMap[userName] || "#f87171";
 
-    // Remove previous cursor
     if (remoteCursors[userName]) {
       remoteCursors[userName].clear();
     }
 
-    // Create cursor element
     const cursorEl = document.createElement("div");
     cursorEl.style.position = "absolute";
     cursorEl.style.borderLeft = `2px solid ${color}`;
     cursorEl.style.height = `${editor.defaultTextHeight()}px`;
     cursorEl.style.zIndex = 999;
 
-    // Username label
     const label = document.createElement("div");
     label.textContent = userName;
     label.style.position = "absolute";

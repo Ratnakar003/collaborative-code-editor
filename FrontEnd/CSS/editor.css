@@ -8,7 +8,6 @@ html, body {
   background: #071127;
   font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
   color: #e5e7eb;
-  /* CHANGE: Body scroll enable chesamu */
   overflow: auto; 
 }
 
@@ -30,17 +29,11 @@ html, body {
 .app-container {
   display: flex;
   flex-direction: column;
-  /* Height ni 100vh peduthu, min-height add chesamu. */
   height: 100vh; 
   min-height: 600px; 
-  
-  /* CRITICAL CHANGE: Increased min-width to 1024px.
-     If screen is smaller than this (e.g. 100% zoom on laptop),
-     Horizontal Page Scrollbar will appear immediately. */
-  min-width: 1024px; 
-  
+  min-width: 1024px; /* Ensures horizontal scroll if too small */
   width: 100%;
-  overflow: hidden; /* Internal scrolling ki container clean ga undali */
+  overflow: hidden;
 }
 
 .app-main {
@@ -64,7 +57,6 @@ html, body {
   height: 100%;
 }
 
-/* User List */
 .sidebar-title {
   font-size: 0.7rem;
   font-weight: 700;
@@ -166,7 +158,6 @@ html, body {
   height: 100%;
 }
 
-/* EDITOR SCROLL FIX */
 #editor { 
   flex: 1; 
   position: relative; 
@@ -235,7 +226,7 @@ html, body {
   font-size: 0.7rem;
 }
 
-/* Output Area - Both Scrolls Active */
+/* Output Area */
 .output {
   flex: 1; 
   background: #0f172a;
@@ -245,7 +236,6 @@ html, body {
   overflow: auto; 
   white-space: pre; 
   max-width: 100%;
-  
   font-family: monospace;
   font-size: 0.8rem;
   color: #e2e8f0;
@@ -261,13 +251,51 @@ html, body {
   flex-shrink: 0;
 }
 
+/* -------------------- MODALS & OVERLAYS -------------------- */
+.join-overlay, .modal-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.join-overlay-box, .modal-box {
+  background: #1e293b;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  max-width: 400px;
+  width: 90%;
+}
+
+.modal-box h3 { margin-top: 0; color: white; font-size: 1.2rem; margin-bottom: 10px; }
+.modal-box p { color: #cbd5e1; margin-bottom: 20px; font-size: 0.95rem; }
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-danger {
+  background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;
+}
+.btn-success {
+  background: #22c55e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;
+}
+.btn-danger:hover { background: #dc2626; }
+.btn-success:hover { background: #16a34a; }
+
 /* Mobile Responsive */
 @media (max-width: 600px) {
-  /* Mobile lo matrame Vertical stacking vastundi. 
-     Desktop layout will PERSIST until 600px, creating scrollbars instead. */
   .app-container { height: auto; min-height: 100vh; min-width: 100%; overflow: visible; }
   .app-main { flex-direction: column; overflow: visible; height: auto; }
-  
   .left-panel, .sidebar { flex: none; height: 300px; width: 100%; }
   .editor-wrapper { flex: none; height: 500px; width: 100%; flex-direction: column; }
   #side-panel { flex: none; height: 300px; width: 100%; border-left: none; border-top: 1px solid #333; max-width: none; }
